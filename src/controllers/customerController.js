@@ -1,0 +1,24 @@
+import {createCustomer, getCustomers} from "../repositories/customerRepository.js";
+export const addCustomer = async (req, res) => {
+    try {
+        const customer = await createCustomer(req.body);
+        res.status(201).json(customer);
+    } catch (error) {
+        res.status(500).json({
+            message:
+            error.message,
+        });        
+    }
+};
+
+export const fetchCustomers = async(req, res) => {
+    try {
+        const customers = await getCustomers();
+        res.json(customers);
+    } catch (error) {
+       res.status(500).json({
+        message:
+          error.message,
+       });        
+    }
+};
