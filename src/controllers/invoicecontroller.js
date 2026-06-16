@@ -1,21 +1,17 @@
-import Invoice from "../repositories/invoice.js";
+import { createInvoice as createInvoiceInDB } from "../repositories/invoice.js";
 import { generateInvoiceNumber } from "../services/documentnumberservice.js";
 
 export const createInvoice = async (req, res) => {
     try {
         const data = req.body;
-
-        const invoice = await Invoice.create({
+        const invoice = await createInvoiceInDB({
             ...data,
-            invoiceNumber:
-                generateInvoiceNumber(),
+            invoice_number: generateInvoiceNumber(),
         });
-        res.status(201).json(
-            invoice
-        );
+        res.status(201).json(invoice);
     } catch (error) {
         res.status(500).json({
             error: error.message,
         });
     }
-};
+}

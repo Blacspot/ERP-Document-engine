@@ -1,67 +1,29 @@
-import mongoose from 'mongoose';
+import supabase from "../config/supabase.js"
 
-const invoiceItemSchema = new mongoose.Schema({
-    description: {
-        type: String,
-        required: true,
-    },
-    quantity: {
-        type: Number,
-        required: true,
-        default: 1,
-    },
-    rate: {
-        type: Number,
-        required: true,
-    },
-    total: {
-        type: Number,
-        required: true,
-    },
-});
-const invoiceSchema = new mongoose.Schema({
-    invoiceNumber: {
-        type: String,
-        unique: true,
-    },
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer',
-        required: true,
-    },
-    items: [invoiceItemSchema],
-    subtotal: Number,
-    tax:{
-        type:Number,
-        default:0,
-    },
-    total:Number,
-    issueDate: {
-        type: Date,
-        default: Date.now,
-    },
-    dueDate: Date,
-    status: {
-        type: String,
-        enum: [
-            "draft",
-            "sent",
-            "paid",
-            "cancelled",
-        ],
-        default: "draft",
-    },
-    pdfPath: {
-        type:String,
-        default: "",
-    },
-
-},
-{
-    timestamps: true,
-}
-);
-export default mongoose.model(
-    "Invoice",
-    invoiceSchema
-)
+export const createInvoice = async (invoiceData) => {
+    const { items, ...invoiceFields } = invoiceData;
+    const { data: invoice, error } = await supabase
+         .from("invoices")
+         .insert([invoiceFields])
+         .select()
+         .single();
+    if (error) {
+       throw new Error(error.message); 
+    }     
+    let insertedItems = [];
+    if(items && items.length > 0) {
+        const itemsWithInvoiceId = items.map((item) => ({
+            ...item,
+            invoice_id: invoice.id,
+        }));
+        const {data, error: itemsError } = await supabase 
+             .from("invoice_items")
+             .insert(itemsWithInvoiceId)
+             .select();
+        if (itemsError) {
+            throw new Error(itemsError.message);
+        }     
+        insertedItems = data;
+    }
+    return { ...invoice, items: insertedItems};
+};
