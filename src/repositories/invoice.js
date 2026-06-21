@@ -2,7 +2,17 @@ import supabase from "../config/supabase.js"
 import { calculateInvoiceTotals } from "../utils/calculateInvoiceTotals.js";
 
 export const createInvoice = async (invoiceData) => {
-    const { items, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, ...invoiceFields} = invoiceData;
+    const today = new Date().toISOString().split("T")[0];
+    const { items, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, issue_date = today, due_date, ...invoiceFields } = invoiceData;
+
+    const invoicePayload = {
+        ...invoiceFields,
+        vat_rate: vatRate,
+        vat_inclusive: vatInclusive,
+        issue_date,
+        due_date: due_date || new Date(new Date(issue_date + 'T00:00:00').getTime() + 30 * 86400000).toISOString().split("T")[0],
+    };
+
     const calculations = calculateInvoiceTotals({
          items,
          vatRate,
@@ -16,9 +26,7 @@ export const createInvoice = async (invoiceData) => {
          .from("invoices")
           .insert([
              {
-                 ...invoiceFields,
-                 vat_rate: vatRate,
-                 vat_inclusive: vatInclusive,
+                 ...invoicePayload,
                  subtotal,
                  tax,
                  total,

@@ -38,6 +38,8 @@ CREATE TABLE invoices (
   created_at timestamp DEFAULT now()
 );
 
+ALTER TABLE invoices ALTER COLUMN issue_date SET DEFAULT CURRENT_DATE;
+
 CREATE TABLE invoice_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id uuid REFERENCES invoices(id) ON DELETE CASCADE,
