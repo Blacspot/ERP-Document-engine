@@ -2,6 +2,7 @@ import express from "express";
 
 import {
     createInvoice,
+    fetchInvoices,
     fetchInvoiceById,
 } from "../controllers/invoicecontroller.js";
 
@@ -11,6 +12,7 @@ router.post(
     "/",
     createInvoice
 );
+router.get("/", fetchInvoices);
 router.get("/:id", fetchInvoiceById)
 
 export default router;

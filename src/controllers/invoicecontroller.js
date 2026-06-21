@@ -1,6 +1,5 @@
-import { createInvoice as createInvoiceInDB } from "../repositories/invoice.js";
+import { createInvoice as createInvoiceInDB, getInvoices, getInvoiceById } from "../repositories/invoice.js";
 import { generateInvoiceNumber } from "../services/documentnumberservice.js";
-import { getInvoiceById } from "../repositories/invoice.js";
 
 export const createInvoice = async (req, res) => {
     try {
@@ -17,12 +16,23 @@ export const createInvoice = async (req, res) => {
         });
     }
 }
+export const fetchInvoices = async(req, res) => {
+    try {
+        const invoices = await getInvoices();
+        res.json({success: true, data: invoices});
+    } catch (error) {
+        res.status(500).json({
+            success:false,
+            message: error.message,
+        });
+    }
+};
 export const fetchInvoiceById = async (req, res) => {
     try {
         const invoice = await getInvoiceById(req.params.id);
         res.json({success: true, data:invoice});
     } catch (error) {
-        res.status(500),json({
+        res.status(500).json({
             success:false,
             message: error.message,
         });
