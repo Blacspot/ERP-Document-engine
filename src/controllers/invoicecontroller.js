@@ -1,4 +1,4 @@
-import { createInvoice as createInvoiceInDB, getInvoices, getInvoiceById, deleteInvoice as deleteInvoiceInDB } from "../repositories/invoice.js";
+import { createInvoice as createInvoiceInDB, getInvoices, getInvoiceById, deleteInvoice as deleteInvoiceInDB, updateInvoice as updateInvoiceInDB, searchInvoices as searchInvoicesInDB } from "../repositories/invoice.js";
 import { generateInvoiceNumber } from "../services/documentnumberservice.js";
 
 export const createInvoice = async (req, res) => {
@@ -8,7 +8,7 @@ export const createInvoice = async (req, res) => {
             ...data,
             invoice_number: generateInvoiceNumber(),
         });
-        res.status(201).json(invoice);
+        res.status(201).json({success: true, data: invoice});
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -45,6 +45,28 @@ export const deleteInvoice = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success:false,
+            message: error.message,
+        });
+    }
+};
+export const updateInvoice = async (req, res) => {
+    try {
+        const invoice = await updateInvoiceInDB(req.params.id, req.body);
+        res.json({success: true, data: invoice});
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+export const searchInvoices = async (req, res) => {
+    try {
+        const result = await searchInvoicesInDB(req.query);
+        res.json({ success: true, ...result });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
             message: error.message,
         });
     }

@@ -19,10 +19,25 @@ export const deleteCustomer = async (id) => {
          .from("customers")
          .delete()
          .eq("id", id);
-     if (error) {
+      if (error) {
+         throw new Error(error.message);
+      }
+      return { success: true };
+};
+
+export const updateCustomer = async (id, customerData) => {
+    const { data, error } =
+    await supabase
+       .from("customers")
+       .update(customerData)
+       .eq("id", id)
+       .select()
+       .single();
+
+    if (error) {
         throw new Error(error.message);
-     }
-     return { success: true };
+    }
+    return data;
 };
 
 export const getCustomers = async () => {

@@ -46,3 +46,106 @@ CREATE TABLE invoice_items (
   rate numeric,
   line_total numeric
 );
+
+CREATE OR REPLACE FUNCTION search_invoices(
+    p_search text DEFAULT NULL,
+    p_customer_id uuid DEFAULT NULL,
+    p_status text DEFAULT NULL,
+    p_date_from date DEFAULT NULL,
+    p_date_to date DEFAULT NULL,
+    p_min_total numeric DEFAULT NULL,
+    p_max_total numeric DEFAULT NULL,
+    p_vat_inclusive boolean DEFAULT NULL,
+    p_page integer DEFAULT 1,
+    p_page_size integer DEFAULT 20
+)
+RETURNS TABLE (
+    id uuid,
+    invoice_number text,
+    customer_id uuid,
+    issue_date date,
+    due_date date,
+    subtotal numeric,
+    tax numeric,
+    total numeric,
+    status text,
+    pdf_path text,
+    created_at timestamp,
+    branch_id uuid,
+    discount numeric,
+    shipping numeric,
+    currency text,
+    vat_rate numeric,
+    vat_inclusive boolean,
+    customer jsonb,
+    items jsonb,
+    total_count bigint
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        i.id,
+        i.invoice_number,
+        i.customer_id,
+        i.issue_date,
+        i.due_date,
+        i.subtotal,
+        i.tax,
+        i.total,
+        i.status,
+        i.pdf_path,
+        i.created_at,
+        i.branch_id,
+        i.discount,
+        i.shipping,
+        i.currency,
+        i.vat_rate,
+        i.vat_inclusive,
+        jsonb_build_object(
+            'id', c.id,
+            'name', c.name,
+            'email', c.email,
+            'phone', c.phone,
+            'address', c.address,
+            'created_at', c.created_at
+        ) AS customer,
+        COALESCE(
+            (SELECT jsonb_agg(
+                jsonb_build_object(
+                    'id', ii.id,
+                    'invoice_id', ii.invoice_id,
+                    'description', ii.description,
+                    'quantity', ii.quantity,
+                    'rate', ii.rate,
+                    'line_total', ii.line_total
+                )
+            ) FROM invoice_items ii WHERE ii.invoice_id = i.id),
+            '[]'::jsonb
+        ) AS items,
+        COUNT(*) OVER() AS total_count
+    FROM invoices i
+    LEFT JOIN customers c ON c.id = i.customer_id
+    WHERE
+        (p_search IS NULL
+            OR i.invoice_number ILIKE '%' || p_search || '%'
+            OR c.name ILIKE '%' || p_search || '%'
+            OR i.status ILIKE '%' || p_search || '%'
+            OR EXISTS (
+                SELECT 1
+                FROM invoice_items ii
+                WHERE ii.invoice_id = i.id
+                  AND ii.description ILIKE '%' || p_search || '%'
+            )
+        )
+        AND (p_customer_id IS NULL OR i.customer_id = p_customer_id)
+        AND (p_status IS NULL OR i.status = p_status)
+        AND (p_date_from IS NULL OR i.issue_date >= p_date_from)
+        AND (p_date_to IS NULL OR i.issue_date <= p_date_to)
+        AND (p_min_total IS NULL OR i.total >= p_min_total)
+        AND (p_max_total IS NULL OR i.total <= p_max_total)
+        AND (p_vat_inclusive IS NULL OR i.vat_inclusive = p_vat_inclusive)
+    ORDER BY i.issue_date DESC
+    LIMIT p_page_size
+    OFFSET ((p_page - 1) * p_page_size);
+END;
+$$ LANGUAGE plpgsql;

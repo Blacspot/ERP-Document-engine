@@ -63,6 +63,95 @@ export const deleteInvoice = async (id) => {
      return { success: true };
 };
 
+export const updateInvoice = async (id, invoiceData) => {
+    const { items, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, ...invoiceFields } = invoiceData;
+
+    let calculations = null;
+    if (items && items.length > 0) {
+        calculations = calculateInvoiceTotals({
+            items,
+            vatRate,
+            vatInclusive,
+            discount: invoiceFields.discount ?? 0,
+            shipping: invoiceFields.shipping ?? 0,
+            currency: invoiceFields.currency ?? "KES",
+        });
+    }
+
+    const updatePayload = {
+        ...invoiceFields,
+        ...(calculations
+            ? { subtotal: calculations.subtotal, tax: calculations.tax, total: calculations.total }
+            : {}),
+        vat_rate: vatRate,
+        vat_inclusive: vatInclusive,
+    };
+
+    const { data: invoice, error } = await supabase
+         .from("invoices")
+         .update(updatePayload)
+         .eq("id", id)
+         .select()
+         .single();
+    if (error) {
+        throw new Error(error.message); 
+    }
+
+    let updatedItems = [];
+    if (items && items.length > 0 && calculations) {
+        await supabase
+             .from("invoice_items")
+             .delete()
+             .eq("invoice_id", id);
+
+        const { data, error: itemsError } = await supabase
+             .from("invoice_items")
+             .insert(calculations.items.map(item => ({ ...item, invoice_id: id })))
+             .select();
+        if (itemsError) {
+            throw new Error(itemsError.message);
+        }
+        updatedItems = data;
+    } else {
+        const { data: existingItems } = await supabase
+             .from("invoice_items")
+             .select("*")
+             .eq("invoice_id", id);
+        updatedItems = existingItems || [];
+    }
+    return { ...invoice, items: updatedItems };
+};
+
+export const searchInvoices = async (filters = {}) => {
+    const { data, error } = await supabase.rpc('search_invoices', {
+        p_search: filters.q || null,
+        p_customer_id: filters.customer_id || null,
+        p_status: filters.status || null,
+        p_date_from: filters.date_from || null,
+        p_date_to: filters.date_to || null,
+        p_min_total: filters.min_total !== undefined && filters.min_total !== "" ? parseFloat(filters.min_total) : null,
+        p_max_total: filters.max_total !== undefined && filters.max_total !== "" ? parseFloat(filters.max_total) : null,
+        p_vat_inclusive: filters.vat_inclusive !== undefined && filters.vat_inclusive !== "" ? String(filters.vat_inclusive).toLowerCase() === "true" : null,
+        p_page: parseInt(filters.page) || 1,
+        p_page_size: parseInt(filters.limit) || 20,
+    });
+    if (error) {
+        throw new Error(error.message);
+    }
+    const totalCount = data?.[0]?.total_count || 0;
+    const page = parseInt(filters.page) || 1;
+    const limit = parseInt(filters.limit) || 20;
+    return {
+        data: data || [],
+        meta: {
+            page,
+            limit,
+            total: totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+        },
+    };
+};
+
 export const getInvoices = async () => {
     const { data: invoices, error } = await supabase
          .from("invoices")
