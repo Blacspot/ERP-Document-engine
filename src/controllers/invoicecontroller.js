@@ -1,4 +1,4 @@
-import { createInvoice as createInvoiceInDB, getInvoices, getInvoiceById } from "../repositories/invoice.js";
+import { createInvoice as createInvoiceInDB, getInvoices, getInvoiceById, deleteInvoice as deleteInvoiceInDB } from "../repositories/invoice.js";
 import { generateInvoiceNumber } from "../services/documentnumberservice.js";
 
 export const createInvoice = async (req, res) => {
@@ -31,6 +31,17 @@ export const fetchInvoiceById = async (req, res) => {
     try {
         const invoice = await getInvoiceById(req.params.id);
         res.json({success: true, data:invoice});
+    } catch (error) {
+        res.status(500).json({
+            success:false,
+            message: error.message,
+        });
+    }
+};
+export const deleteInvoice = async (req, res) => {
+    try {
+        const result = await deleteInvoiceInDB(req.params.id);
+        res.json({success: true, ...result});
     } catch (error) {
         res.status(500).json({
             success:false,

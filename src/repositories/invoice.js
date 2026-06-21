@@ -2,19 +2,28 @@ import supabase from "../config/supabase.js"
 import { calculateInvoiceTotals } from "../utils/calculateInvoiceTotals.js";
 
 export const createInvoice = async (invoiceData) => {
-    const { items, taxRate = 0, ...invoiceFields} = invoiceData;
-    const calculations = calculateInvoiceTotals(items, taxRate);
+    const { items, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, ...invoiceFields} = invoiceData;
+    const calculations = calculateInvoiceTotals({
+         items,
+         vatRate,
+         vatInclusive,
+         discount: invoiceFields.discount ?? 0,
+         shipping: invoiceFields.shipping ?? 0,
+         currency: invoiceFields.currency ?? "KES",
+        });
     const {subtotal, tax, total, items: processedItems} = calculations;
     const { data: invoice, error } = await supabase
          .from("invoices")
-         .insert([
-            {
-                ...invoiceFields,
-                subtotal,
-                tax,
-                total,
-            },
-         ])
+          .insert([
+             {
+                 ...invoiceFields,
+                 vat_rate: vatRate,
+                 vat_inclusive: vatInclusive,
+                 subtotal,
+                 tax,
+                 total,
+             },
+          ])
          .select()
          .single();
     if (error) {
@@ -41,6 +50,17 @@ export const createInvoice = async (invoiceData) => {
         insertedItems = data;
     }
     return { ...invoice, items: insertedItems};
+};
+
+export const deleteInvoice = async (id) => {
+    const { error } = await supabase
+         .from("invoices")
+         .delete()
+         .eq("id", id);
+     if (error) {
+        throw new Error(error.message); 
+     }     
+     return { success: true };
 };
 
 export const getInvoices = async () => {

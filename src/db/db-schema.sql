@@ -28,6 +28,11 @@ CREATE TABLE invoices (
   subtotal numeric,
   tax numeric DEFAULT 0,
   total numeric,
+  discount numeric DEFAULT 0,
+  shipping numeric DEFAULT 0,
+  currency text DEFAULT 'KES',
+  vat_rate numeric DEFAULT 0,
+  vat_inclusive boolean DEFAULT false,
   status text DEFAULT 'draft',
   pdf_path text,
   created_at timestamp DEFAULT now()

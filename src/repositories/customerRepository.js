@@ -14,6 +14,17 @@ export const createCustomer = async (
     }  
     return data;
 };
+export const deleteCustomer = async (id) => {
+    const { error } = await supabase
+         .from("customers")
+         .delete()
+         .eq("id", id);
+     if (error) {
+        throw new Error(error.message);
+     }
+     return { success: true };
+};
+
 export const getCustomers = async () => {
     const { data, error } = await supabase
          .from("customers")

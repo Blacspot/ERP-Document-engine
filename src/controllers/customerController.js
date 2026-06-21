@@ -1,4 +1,4 @@
-import {createCustomer, getCustomers} from "../repositories/customerRepository.js";
+import {createCustomer, getCustomers, deleteCustomer as deleteCustomerInDB} from "../repositories/customerRepository.js";
 export const addCustomer = async (req, res) => {
     try {
         const customer = await createCustomer(req.body || req.query);
@@ -20,5 +20,17 @@ export const fetchCustomers = async(req, res) => {
         message:
           error.message,
        });        
+    }
+};
+
+export const deleteCustomer = async (req, res) => {
+    try {
+        const result = await deleteCustomerInDB(req.params.id);
+        res.json({success: true, ...result});
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
 };

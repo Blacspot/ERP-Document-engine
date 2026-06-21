@@ -1,13 +1,17 @@
-export const calculateInvoiceTotals = (
+export const calculateInvoiceTotals = ({
     items,
-    taxRate = 0
-) => {
+    vatRate = 0,
+    discount = 0,
+    shipping = 0,
+    currency = "KES",
+    vatInclusive = false,
+}) => {
     const processedItems = items.map(
-        (items) => {
+        (item) => {
             const line_total =
-              items.quantity * items.rate;
+              item.quantity * item.rate;
             return {
-                ...items,
+                ...item,
                 line_total,
             };  
         }
@@ -18,12 +22,24 @@ export const calculateInvoiceTotals = (
             sum + item.line_total,
         0
        );
-    const tax = subtotal * taxRate;
-    const total = subtotal + tax;
+    let taxableAmount = subtotal - discount;
+    let tax = 0;
+    
+    if (vatInclusive) {
+        tax = taxableAmount - taxableAmount / (1 + vatRate);
+        
+    } else {
+        tax = taxableAmount * vatRate;
+        
+    }
+    
+    const total = taxableAmount + (vatInclusive ? 0 : tax) + shipping;
     return {
         items: processedItems,
         subtotal,
+        discount,
         tax,
+        shipping,
         total,
     };   
 };
