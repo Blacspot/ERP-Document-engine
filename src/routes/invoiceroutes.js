@@ -8,6 +8,7 @@ import {
     updateInvoice,
     searchInvoices,
 } from "../controllers/invoicecontroller.js";
+import { previewInvoice } from "../controllers/pdfController.js";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.post(
 router.get("/", fetchInvoices);
 router.get("/search", searchInvoices);
 router.get("/:id", fetchInvoiceById)
+router.get("/:id/preview", previewInvoice)
 router.delete("/:id", deleteInvoice);
 router.put("/:id", updateInvoice);
 

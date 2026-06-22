@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+Invoice
+</title>
+
+</head>
+
+<body>
+
+<h1>
+INVOICE
+</h1>
+
+<p>
+Invoice Number:
+{{invoice_number}}
+</p>
+
+<p>
+Issue Date:
+{{issue_date}}
+</p>
+
+<hr>
+
+<h2>
+Customer
+</h2>
+
+<p>
+{{customer.name}}
+</p>
+
+<p>
+{{customer.phone}}
+</p>
+
+<p>
+{{customer.email}}
+</p>
+
+<table border="1">
+
+<thead>
+<tr>
+<th>Description</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Total</th>
+</tr>
+</thead>
+
+<tbody>
+
+{{#each items}}
+
+<tr>
+
+<td>
+{{description}}
+</td>
+
+<td>
+{{quantity}}
+</td>
+
+<td>
+{{money rate ../currency}}
+</td>
+
+<td>
+{{money line_total ../currency}}
+</td>
+
+</tr>
+
+{{/each}}
+
+</tbody>
+
+</table>
+
+<h3>
+Subtotal:
+{{money subtotal currency}}
+</h3>
+
+<h3>
+Tax:
+{{money tax currency}}
+</h3>
+
+<h3>
+Total:
+{{money total currency}}
+</h3>
+
+</body>
+</html>
