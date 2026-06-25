@@ -7,8 +7,12 @@ import {
     deleteInvoice,
     updateInvoice,
     searchInvoices,
+    recordPayment,
+    cancelInvoice,
+    markInvoicePaid,
 } from "../controllers/invoicecontroller.js";
 import { previewInvoice } from "../controllers/pdfController.js";
+
 
 const router = express.Router();
 
@@ -22,5 +26,8 @@ router.get("/:id", fetchInvoiceById)
 router.get("/:id/preview", previewInvoice)
 router.delete("/:id", deleteInvoice);
 router.put("/:id", updateInvoice);
+router.patch("/:id/cancel", cancelInvoice);
+router.patch("/:id/pay", markInvoicePaid);
+router.patch("/:id/payment", recordPayment);
 
 export default router;

@@ -3,10 +3,11 @@ import { calculateInvoiceTotals } from "../utils/calculateInvoiceTotals.js";
 
 export const createInvoice = async (invoiceData) => {
     const today = new Date().toISOString().split("T")[0];
-    const { items, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, issue_date = today, due_date, ...invoiceFields } = invoiceData;
+    const { items, status, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, issue_date = today, due_date, ...invoiceFields } = invoiceData;
 
     const invoicePayload = {
         ...invoiceFields,
+        status: "draft",
         vat_rate: vatRate,
         vat_inclusive: vatInclusive,
         issue_date,
@@ -105,6 +106,12 @@ export const updateInvoice = async (id, invoiceData) => {
         throw new Error(error.message); 
     }
 
+    if (invoice.amount_paid > updatePayload.total) {
+        throw new Error(
+            "Invoice total cannot be less than amount already paid"
+        )
+    }
+
     let updatedItems = [];
     if (items && items.length > 0 && calculations) {
         await supabase
@@ -180,8 +187,17 @@ export const getInvoices = async () => {
                 .from("invoice_items")
                 .select("*")
                 .eq("invoice_id", invoice.id);
+            const today = new Date();
+            const dueDate = new Date(invoice.due_date);
+            let computedStatus = invoice.status;
+            if(
+                invoice.status === "sent" && dueDate < today
+            )  {
+                computedStatus = "overdue";
+            }  
             return {
                 ...invoice,
+                status: computedStatus,
                 customer,
                 items,
             };
@@ -207,9 +223,98 @@ export const getInvoiceById = async (id) => {
          .from("invoice_items")
          .select("*")
          .eq("invoice_id", invoice.id);
+    const today = new Date();
+    const dueDate = new Date(invoice.due_date);
+    let computedStatus = invoice.status;
+    if (
+        invoice.status === "sent" && dueDate < today
+    ) {
+        computedStatus = "overdue";
+    }    
     return {
         ...invoice,
+        status: computedStatus,
         customer,
         items,
     };         
 };
+
+export const cancelInvoice = async (id) => {
+    const { data, error } = await supabase
+        .from("invoices")
+        .update({
+            status: "cancelled"
+        })
+        .eq("id", id)
+        .neq("status","paid")
+        .select()
+        .single();
+    if (error) {
+        throw new Error(error.message);
+    }    
+    return data;
+
+};
+export const markInvoicePaid = async (id) => {
+    const {data, error} = await supabase
+        .from("invoices")
+        .update({status: "paid"})
+        .eq("id", id)
+        .neq("status", "cancelled")
+        .select()
+        .single();
+    if (error) {
+        throw new Error(error.message);
+    }    
+    return data;
+};
+export const markInvoicePartiallyPaid = async (
+    id,
+    amountPaid
+) => {
+    const { data: invoice, error: fetchError } = await supabase
+           .from("invoices")
+           .select("*")
+           .eq("id", id)
+           .single();
+    if (fetchError) {
+        throw new Error(fetchError.message);
+    } 
+    if (invoice.status === "paid") {
+        throw new Error(
+            "Invoice is already paid"
+        );
+    }
+    if ( invoice.status === "cancelled"){
+        throw new Error(
+            "Cannot pay a cancelled invoice"
+        );
+    }      
+    const newAmountPaid = Number(invoice.amount_paid || 0) + Number(amountPaid);
+    if (amountPaid <= 0) {
+        throw new Error(
+            "Payment amount must be greater than zero"
+        );
+    }
+    const cappedAmountPaid = Math.min(
+        newAmountPaid,
+        invoice.total
+    ); 
+    const status = cappedAmountPaid >= invoice.total
+     ? "paid" 
+     : "partially_paid";
+    
+    const {data, error } = await supabase 
+           .from("invoices")
+           .update({
+               amount_paid:cappedAmountPaid,
+               status,
+           })
+           .eq("id", id)
+           .select()
+           .single();
+    if (error) {
+        throw new Error(error.message);
+    }       
+    return { ...data, balance: data.total - data.amount_paid};
+}

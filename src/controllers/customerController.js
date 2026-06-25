@@ -1,7 +1,7 @@
 import {createCustomer, getCustomers, deleteCustomer as deleteCustomerInDB, updateCustomer as updateCustomerInDB} from "../repositories/customerRepository.js";
 export const addCustomer = async (req, res) => {
     try {
-        const customer = await createCustomer(req.body || req.query);
+        const customer = await createCustomer(req.body);
         res.status(201).json(customer);
     } catch (error) {
         res.status(500).json({

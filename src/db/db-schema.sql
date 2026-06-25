@@ -40,6 +40,35 @@ CREATE TABLE invoices (
 
 ALTER TABLE invoices ALTER COLUMN issue_date SET DEFAULT CURRENT_DATE;
 
+ALTER TABLE invoices
+ADD CONSTRAINT invoice_status_check
+CHECK (
+    status IN (
+        'draft',
+        'sent',
+        'paid',
+        'partially_paid',
+        'cancelled'
+    )
+);
+
+CREATE OR REPLACE FUNCTION set_due_date()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.due_date IS NULL THEN
+        NEW.due_date := NEW.issue_date + INTERVAL '30 days';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_due_date_trigger ON invoices;
+
+CREATE TRIGGER set_due_date_trigger
+    BEFORE INSERT OR UPDATE ON invoices
+    FOR EACH ROW
+    EXECUTE FUNCTION set_due_date();
+
 CREATE TABLE invoice_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id uuid REFERENCES invoices(id) ON DELETE CASCADE,
@@ -151,3 +180,6 @@ BEGIN
     OFFSET ((p_page - 1) * p_page_size);
 END;
 $$ LANGUAGE plpgsql;
+
+ALTER TABLE invoices
+ADD COLUMN amount_paid numeric DEFAULT 0;
