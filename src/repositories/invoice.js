@@ -318,3 +318,18 @@ export const markInvoicePartiallyPaid = async (
     }       
     return { ...data, balance: data.total - data.amount_paid};
 }
+export const savePdfPath = async (id, pdfPath) => {
+    const {data, error} = await supabase
+         .from("invoices")
+         .update({
+            pdf_path: pdfPath,
+            status: "sent",
+         })
+         .eq("id", id)
+         .select()
+         .single();
+     if (error) {
+        throw new Error(error.message);
+     }    
+     return data;
+};
