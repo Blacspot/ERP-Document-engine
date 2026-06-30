@@ -1,6 +1,6 @@
-import { createInvoice as createInvoiceInDB, getInvoices, getInvoiceById, deleteInvoice as deleteInvoiceInDB, updateInvoice as updateInvoiceInDB, searchInvoices as searchInvoicesInDB, markInvoicePartiallyPaid, cancelInvoice as cancelInvoiceInDB } from "../repositories/invoice.js";
-import { generateInvoiceNumber } from "../services/documentnumberservice.js";
-import { markInvoicePaid as markInvoicePaidInDB } from "../repositories/invoice.js";
+import { createInvoice as createInvoiceInDB, markInvoicePaid as markInvoicePaidInDB, getInvoices, getInvoiceById, deleteInvoice as deleteInvoiceInDB, updateInvoice as updateInvoiceInDB, searchInvoices as searchInvoicesInDB, markInvoicePartiallyPaid, cancelInvoice as cancelInvoiceInDB } from "../repositories/invoice.js";
+import { generateInvoiceNumber } from "../services/numbering/documentnumberservice.js";
+import { generateInvoiceDocument as generateDocument } from "../services/document/documentservice.js";
 
 export const createInvoice = async (req, res) => {
     try {
@@ -102,6 +102,20 @@ export const markInvoicePaid = async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message,
+        });
+    }
+};
+export const generateInvoiceDocument = async(req, res) => {
+    try {
+        const invoice = await getInvoiceById(req.params.id);
+        const document = await generateDocument(invoice);
+        res.setHeader("Content-Type","application/pdf");
+        res.setHeader("Content-Disposition",`inline; filename=${invoice.invoice_number}.pdf`);
+        res.send(document.pdfBuffer);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 };

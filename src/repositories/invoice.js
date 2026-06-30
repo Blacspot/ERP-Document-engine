@@ -1,4 +1,5 @@
-import supabase from "../config/supabase.js"
+import supabase from "../config/supabase.js";
+import { calculateInvoiceStatus } from "../utils/status.js";
 import { calculateInvoiceTotals } from "../utils/calculateInvoiceTotals.js";
 
 export const createInvoice = async (invoiceData) => {
@@ -74,7 +75,8 @@ export const deleteInvoice = async (id) => {
 
 export const updateInvoice = async (id, invoiceData) => {
     const { items, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, ...invoiceFields } = invoiceData;
-
+    const existingInvoice = await getInvoiceById(id);
+    const newTotal = calculations.total;
     let calculations = null;
     if (items && items.length > 0) {
         calculations = calculateInvoiceTotals({
@@ -87,6 +89,25 @@ export const updateInvoice = async (id, invoiceData) => {
         });
     }
 
+    const { data: existingInvoice, error: fetchError } = await supabase
+         .from("invoices")
+         .select("*")
+         .eq("id", id)
+         .single();
+    if (fetchError) {
+        throw new Error(fetchError.message);
+    }     
+    if (existingInvoice.status === "paid") {
+        throw new Error(
+            "Paid invoices cannot be edited."
+        );
+    }
+    if (existingInvoice.status === "cancelled") {
+        throw new Error(
+            "Cancelled invoices cannot be edited."
+        );
+    }
+
     const updatePayload = {
         ...invoiceFields,
         ...(calculations
@@ -95,7 +116,12 @@ export const updateInvoice = async (id, invoiceData) => {
         vat_rate: vatRate,
         vat_inclusive: vatInclusive,
     };
-
+    if (calculations && Number(existingInvoice.amount_paid || 0) > calculations.total) {
+        throw new Error(
+            "Invoice total cannot be less than the amount already paid."
+        );
+    }
+    
     const { data: invoice, error } = await supabase
          .from("invoices")
          .update(updatePayload)
@@ -106,11 +132,7 @@ export const updateInvoice = async (id, invoiceData) => {
         throw new Error(error.message); 
     }
 
-    if (invoice.amount_paid > updatePayload.total) {
-        throw new Error(
-            "Invoice total cannot be less than amount already paid"
-        )
-    }
+    
 
     let updatedItems = [];
     if (items && items.length > 0 && calculations) {
@@ -187,9 +209,8 @@ export const getInvoices = async () => {
                 .from("invoice_items")
                 .select("*")
                 .eq("invoice_id", invoice.id);
-            const today = new Date();
-            const dueDate = new Date(invoice.due_date);
-            let computedStatus = invoice.status;
+            
+            status: calculateInvoiceStatus(invoice)
             if(
                 invoice.status === "sent" && dueDate < today
             )  {
@@ -223,9 +244,7 @@ export const getInvoiceById = async (id) => {
          .from("invoice_items")
          .select("*")
          .eq("invoice_id", invoice.id);
-    const today = new Date();
-    const dueDate = new Date(invoice.due_date);
-    let computedStatus = invoice.status;
+    status: calculateInvoiceStatus(invoice)
     if (
         invoice.status === "sent" && dueDate < today
     ) {
