@@ -1,104 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
 <meta charset="UTF-8">
-
-<title>
-Invoice
-</title>
-
+<title>Invoice {{invoice_number}}</title>
+<style>{{{css}}}</style>
 </head>
-
 <body>
 
-<h1>
-INVOICE
-</h1>
+<header class="header">
+  <div class="brand">
+    {{#if branch.logo_url}}
+      <img class="logo" src="{{branch.logo_url}}" alt="">
+    {{/if}}
+    <div class="brand-text">
+      <div class="brand-name">{{branch.name}}</div>
+      {{#if branch.address}}<div>{{branch.address}}</div>{{/if}}
+      {{#if branch.email}}<div>{{branch.email}}</div>{{/if}}
+      {{#if branch.phone}}<div>{{branch.phone}}</div>{{/if}}
+    </div>
+  </div>
 
-<p>
-Invoice Number:
-{{invoice_number}}
-</p>
+  <div class="doc-meta">
+    <div class="doc-title">INVOICE</div>
+    <div class="doc-number">{{invoice_number}}</div>
+    <span class="badge status-{{status}}">{{statusLabel status}}</span>
+  </div>
+</header>
 
-<p>
-Issue Date:
-{{issue_date}}
-</p>
+<section class="parties">
+  <div class="party">
+    <div class="label">Billed to</div>
+    <div class="party-name">{{customer.name}}</div>
+    {{#if customer.address}}<div>{{customer.address}}</div>{{/if}}
+    {{#if customer.email}}<div>{{customer.email}}</div>{{/if}}
+    {{#if customer.phone}}<div>{{customer.phone}}</div>{{/if}}
+  </div>
 
-<hr>
+  <div class="party dates">
+    <div class="label">Issued</div>
+    <div>{{date issue_date}}</div>
+    <div class="label spaced">Due</div>
+    <div>{{date due_date}}</div>
+  </div>
+</section>
 
-<h2>
-Customer
-</h2>
-
-<p>
-{{customer.name}}
-</p>
-
-<p>
-{{customer.phone}}
-</p>
-
-<p>
-{{customer.email}}
-</p>
-
-<table border="1">
-
-<thead>
-<tr>
-<th>Description</th>
-<th>Qty</th>
-<th>Rate</th>
-<th>Total</th>
-</tr>
-</thead>
-
-<tbody>
-
-{{#each items}}
-
-<tr>
-
-<td>
-{{description}}
-</td>
-
-<td>
-{{quantity}}
-</td>
-
-<td>
-{{money rate ../currency}}
-</td>
-
-<td>
-{{money line_total ../currency}}
-</td>
-
-</tr>
-
-{{/each}}
-
-</tbody>
-
+<table class="items">
+  <thead>
+    <tr>
+      <th class="col-desc">Description</th>
+      <th class="col-qty num">Qty</th>
+      <th class="col-rate num">Rate</th>
+      <th class="col-total num">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each items}}
+    <tr>
+      <td class="col-desc">{{description}}</td>
+      <td class="col-qty num">{{quantity}}</td>
+      <td class="col-rate num">{{money rate ../currency}}</td>
+      <td class="col-total num">{{money line_total ../currency}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
 </table>
 
-<h3>
-Subtotal:
-{{money subtotal currency}}
-</h3>
+<section class="totals">
+  <div class="totals-box">
+    <div class="row">
+      <span>Subtotal</span>
+      <span>{{money subtotal currency}}</span>
+    </div>
 
-<h3>
-Tax:
-{{money tax currency}}
-</h3>
+    {{#if discount}}
+    <div class="row">
+      <span>Discount</span>
+      <span>- {{money discount currency}}</span>
+    </div>
+    {{/if}}
 
-<h3>
-Total:
-{{money total currency}}
-</h3>
+    {{#if tax}}
+    <div class="row">
+      <span>VAT ({{percent vat_rate}}%{{#if vat_inclusive}}, inclusive{{/if}})</span>
+      <span>{{money tax currency}}</span>
+    </div>
+    {{/if}}
+
+    {{#if shipping}}
+    <div class="row">
+      <span>Shipping</span>
+      <span>{{money shipping currency}}</span>
+    </div>
+    {{/if}}
+
+    <div class="row grand">
+      <span>Total</span>
+      <span>{{money total currency}}</span>
+    </div>
+
+    {{#if (gt amount_paid 0)}}
+    <div class="row">
+      <span>Paid</span>
+      <span>{{money amount_paid currency}}</span>
+    </div>
+    <div class="row balance">
+      <span>Balance due</span>
+      <span>{{money (balance total amount_paid) currency}}</span>
+    </div>
+    {{/if}}
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="notes">
+    <div class="label">Payment terms</div>
+    <p>Payment is due by {{date due_date}}. Thank you for your business.</p>
+  </div>
+
+  <div class="signature-block">
+    {{#if branch.signature_url}}
+      <img class="signature" src="{{branch.signature_url}}" alt="">
+    {{else}}
+      <div class="signature-space"></div>
+    {{/if}}
+    <div class="signature-line">Authorised signature</div>
+  </div>
+</footer>
 
 </body>
 </html>

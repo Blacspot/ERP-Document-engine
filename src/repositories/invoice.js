@@ -75,8 +75,6 @@ export const deleteInvoice = async (id) => {
 
 export const updateInvoice = async (id, invoiceData) => {
     const { items, vat_rate: vatRate = 0, vat_inclusive: vatInclusive = false, ...invoiceFields } = invoiceData;
-    const existingInvoice = await getInvoiceById(id);
-    const newTotal = calculations.total;
     let calculations = null;
     if (items && items.length > 0) {
         calculations = calculateInvoiceTotals({
@@ -209,13 +207,7 @@ export const getInvoices = async () => {
                 .from("invoice_items")
                 .select("*")
                 .eq("invoice_id", invoice.id);
-            
-            status: calculateInvoiceStatus(invoice)
-            if(
-                invoice.status === "sent" && dueDate < today
-            )  {
-                computedStatus = "overdue";
-            }  
+            const computedStatus = calculateInvoiceStatus(invoice);
             return {
                 ...invoice,
                 status: computedStatus,
@@ -244,17 +236,16 @@ export const getInvoiceById = async (id) => {
          .from("invoice_items")
          .select("*")
          .eq("invoice_id", invoice.id);
-    status: calculateInvoiceStatus(invoice)
-    if (
-        invoice.status === "sent" && dueDate < today
-    ) {
-        computedStatus = "overdue";
-    }    
+    const { data: branch } = invoice.branch_id
+        ? await supabase.from("branches").select("*").eq("id", invoice.branch_id).single()
+        : { data: null };     
+    const computedStatus = calculateInvoiceStatus(invoice);
     return {
         ...invoice,
         status: computedStatus,
         customer,
         items,
+        branch,
     };         
 };
 
@@ -275,17 +266,31 @@ export const cancelInvoice = async (id) => {
 
 };
 export const markInvoicePaid = async (id) => {
-    const {data, error} = await supabase
+    const { data: invoice, error: fetchError } = await supabase
         .from("invoices")
-        .update({status: "paid"})
+        .select("*")
         .eq("id", id)
-        .neq("status", "cancelled")
+        .single();
+    if (fetchError) {
+        throw new Error(fetchError.message);
+    }
+    if (invoice.status === "cancelled") {
+        throw new Error("Cannot pay a cancelled invoice");
+    }
+
+    const { data, error } = await supabase
+        .from("invoices")
+        .update({
+            status: "paid",
+            amount_paid: invoice.total,
+        })
+        .eq("id", id)
         .select()
         .single();
     if (error) {
         throw new Error(error.message);
-    }    
-    return data;
+    }
+    return { ...data, balance: 0 };
 };
 export const markInvoicePartiallyPaid = async (
     id,
@@ -309,12 +314,12 @@ export const markInvoicePartiallyPaid = async (
             "Cannot pay a cancelled invoice"
         );
     }      
-    const newAmountPaid = Number(invoice.amount_paid || 0) + Number(amountPaid);
     if (amountPaid <= 0) {
         throw new Error(
             "Payment amount must be greater than zero"
         );
-    }
+    }      
+    const newAmountPaid = Number(invoice.amount_paid || 0) + Number(amountPaid);
     const cappedAmountPaid = Math.min(
         newAmountPaid,
         invoice.total
@@ -338,17 +343,28 @@ export const markInvoicePartiallyPaid = async (
     return { ...data, balance: data.total - data.amount_paid};
 }
 export const savePdfPath = async (id, pdfPath) => {
-    const {data, error} = await supabase
-         .from("invoices")
-         .update({
-            pdf_path: pdfPath,
-            status: "sent",
-         })
-         .eq("id", id)
-         .select()
-         .single();
-     if (error) {
+    const { data: invoice, error: fetchError } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("id", id)
+        .single();
+    if (fetchError) {
+        throw new Error(fetchError.message);
+    }
+
+    const updatePayload = { pdf_path: pdfPath };
+    if (invoice.status === "draft") {
+        updatePayload.status = "sent";
+    }
+
+    const { data, error } = await supabase
+        .from("invoices")
+        .update(updatePayload)
+        .eq("id", id)
+        .select()
+        .single();
+    if (error) {
         throw new Error(error.message);
-     }    
-     return data;
+    }
+    return data;
 };

@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import Handlebars from "handlebars";
+import { getStatusMeta } from "../../utils/statusMeta.js";
 
 Handlebars.registerHelper(
         "money",
@@ -16,6 +17,15 @@ Handlebars.registerHelper(
               )}`;
         }
     ); 
+Handlebars.registerHelper("date", (v) =>
+    v ? new Date(v).toLocaleDateString("en-KE", {
+        day: "2-digit", month: "short", year: "numeric", timeZone: "UTC",
+    }) : ""
+);
+Handlebars.registerHelper("percent", (v) => Number((Number(v || 0) * 100).toFixed(2)));
+Handlebars.registerHelper("statusLabel", (s) => getStatusMeta(s)?.label ?? s);
+Handlebars.registerHelper("gt", (a, b) => Number(a || 0) > Number(b || 0));
+Handlebars.registerHelper("balance", (total, paid) => Number(total || 0) - Number(paid || 0));    
 
 export const compileTemplate = async (
     templateName,
@@ -38,6 +48,7 @@ export const compileTemplate = async (
         templateSource
        );
      
-    
-    return template(data);  
+    const cssPath = templatePath.replace(/\.hbs$/, ".css");
+    const css = await fs.readFile(cssPath, "utf8").catch(() => "");
+    return template({ ...data, css }); 
 };
