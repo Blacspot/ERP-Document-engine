@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Receipt {{receipt_number}}</title>
+<style>{{{css}}}</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    {{#if branch.logo_url}}
+      <img class="logo" src="{{{branch.logo_url}}}" alt="">
+    {{/if}}
+    <div class="brand-text">
+      <div class="brand-name">{{branch.name}}</div>
+      {{#if branch.address}}<div>{{branch.address}}</div>{{/if}}
+      {{#if branch.email}}<div>{{branch.email}}</div>{{/if}}
+      {{#if branch.phone}}<div>{{branch.phone}}</div>{{/if}}
+    </div>
+  </div>
+
+  <div class="doc-meta">
+    <div class="doc-title">RECEIPT</div>
+    <div class="doc-number">{{receipt_number}}</div>
+    <span class="badge status-paid">Payment received</span>
+  </div>
+</header>
+
+<section class="parties">
+  <div class="party">
+    <div class="label">Received from</div>
+    <div class="party-name">{{customer.name}}</div>
+    {{#if customer.address}}<div>{{customer.address}}</div>{{/if}}
+    {{#if customer.email}}<div>{{customer.email}}</div>{{/if}}
+    {{#if customer.phone}}<div>{{customer.phone}}</div>{{/if}}
+  </div>
+
+  <div class="party dates">
+    <div class="label">Payment date</div>
+    <div>{{date payment_date}}</div>
+    <div class="label spaced">For invoice</div>
+    <div>{{invoice.invoice_number}}</div>
+  </div>
+</section>
+
+<div class="amount-box">
+  <div class="label">Amount received</div>
+  <div class="amount">{{money amount currency}}</div>
+</div>
+
+<table class="details">
+  <tr>
+    <td>Payment method</td>
+    <td>{{methodLabel payment_method}}</td>
+  </tr>
+  {{#if reference}}
+  <tr>
+    <td>Reference</td>
+    <td>{{reference}}</td>
+  </tr>
+  {{/if}}
+  <tr>
+    <td>Invoice total</td>
+    <td>{{money invoice.total currency}}</td>
+  </tr>
+  <tr>
+    <td>Balance after this payment</td>
+    <td>{{money balance_after currency}}</td>
+  </tr>
+  {{#if notes}}
+  <tr>
+    <td>Notes</td>
+    <td>{{notes}}</td>
+  </tr>
+  {{/if}}
+</table>
+
+<footer class="footer">
+  <div class="notes">
+    <p>Thank you for your payment.</p>
+  </div>
+
+  <div class="signature-block">
+    {{#if branch.signature_url}}
+      <img class="signature" src="{{{branch.signature_url}}}" alt="">
+    {{else}}
+      <div class="signature-space"></div>
+    {{/if}}
+    <div class="signature-line">Received by</div>
+  </div>
+</footer>
+
+</body>
+</html>

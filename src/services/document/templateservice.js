@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import Handlebars from "handlebars";
 import { getStatusMeta } from "../../utils/statusMeta.js";
+import { downloadFile } from "./storageservice.js";
 
 Handlebars.registerHelper(
         "money",
@@ -26,7 +27,9 @@ Handlebars.registerHelper("percent", (v) => Number((Number(v || 0) * 100).toFixe
 Handlebars.registerHelper("statusLabel", (s) => getStatusMeta(s)?.label ?? s);
 Handlebars.registerHelper("gt", (a, b) => Number(a || 0) > Number(b || 0));
 Handlebars.registerHelper("balance", (total, paid) => Number(total || 0) - Number(paid || 0));    
-
+Handlebars.registerHelper("methodLabel", (m) => ({
+    cash: "Cash", mpesa: "M-Pesa", bank_transfer: "Bank transfer", card: "Card", cheque: "Cheque",
+}[m] ?? m));
 export const compileTemplate = async (
     templateName,
     data
@@ -47,8 +50,20 @@ export const compileTemplate = async (
        Handlebars.compile(
         templateSource
        );
+    const toDataUri = async (key) => {
+        if (!key) return null;
+        try {
+            const { buffer, contentType } = await downloadFile(key);
+            return `data:${contentType || "image/png"};base64,${buffer.toString("base64")}`;
+        } catch {
+            return null;
+        }
+    };
      
-    const cssPath = templatePath.replace(/\.hbs$/, ".css");
-    const css = await fs.readFile(cssPath, "utf8").catch(() => "");
-    return template({ ...data, css }); 
+    const sharedCss = await fs.readFile(
+         path.join(process.cwd(), "src", "templates", "shared.css"), "utf8"
+    ).catch(() => "");
+    const ownCss = await fs.readFile(templatePath.replace(/\.hbs$/, ".css"), "utf8").catch(() => "");
+    const css = sharedCss + ownCss;
+    return template({ ...data, css, toDataUri }); 
 };

@@ -343,28 +343,9 @@ export const markInvoicePartiallyPaid = async (
     return { ...data, balance: data.total - data.amount_paid};
 }
 export const savePdfPath = async (id, pdfPath) => {
-    const { data: invoice, error: fetchError } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("id", id)
-        .single();
-    if (fetchError) {
-        throw new Error(fetchError.message);
-    }
-
-    const updatePayload = { pdf_path: pdfPath };
-    if (invoice.status === "draft") {
-        updatePayload.status = "sent";
-    }
-
     const { data, error } = await supabase
-        .from("invoices")
-        .update(updatePayload)
-        .eq("id", id)
-        .select()
-        .single();
-    if (error) {
-        throw new Error(error.message);
-    }
+        .from("invoices").update({ pdf_path: pdfPath }).eq("id", id).select().single();
+    if (error) throw new Error(error.message);
+    await supabase.from("invoices").update({ status: "sent" }).eq("id", id).eq("status", "draft");
     return data;
 };

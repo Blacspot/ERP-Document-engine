@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quotation {{quotation_number}}</title>
+<style>{{{css}}}</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    {{#if branch.logo_url}}
+      <img class="logo" src="{{{branch.logo_url}}}" alt="">
+    {{/if}}
+    <div class="brand-text">
+      <div class="brand-name">{{branch.name}}</div>
+      {{#if branch.address}}<div>{{branch.address}}</div>{{/if}}
+      {{#if branch.email}}<div>{{branch.email}}</div>{{/if}}
+      {{#if branch.phone}}<div>{{branch.phone}}</div>{{/if}}
+    </div>
+  </div>
+
+  <div class="doc-meta">
+    <div class="doc-title">QUOTATION</div>
+    <div class="doc-number">{{quotation_number}}</div>
+    <span class="badge status-{{status}}">{{statusLabel status}}</span>
+  </div>
+</header>
+
+<section class="parties">
+  <div class="party">
+    <div class="label">Prepared for</div>
+    <div class="party-name">{{customer.name}}</div>
+    {{#if customer.address}}<div>{{customer.address}}</div>{{/if}}
+    {{#if customer.email}}<div>{{customer.email}}</div>{{/if}}
+    {{#if customer.phone}}<div>{{customer.phone}}</div>{{/if}}
+  </div>
+
+  <div class="party dates">
+    <div class="label">Issued</div>
+    <div>{{date issue_date}}</div>
+    <div class="label spaced">Valid until</div>
+    <div>{{date valid_until}}</div>
+  </div>
+</section>
+
+<table class="items">
+  <thead>
+    <tr>
+      <th class="col-desc">Description</th>
+      <th class="col-qty num">Qty</th>
+      <th class="col-rate num">Rate</th>
+      <th class="col-total num">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each items}}
+    <tr>
+      <td class="col-desc">{{description}}</td>
+      <td class="col-qty num">{{quantity}}</td>
+      <td class="col-rate num">{{money rate ../currency}}</td>
+      <td class="col-total num">{{money line_total ../currency}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<section class="totals">
+  <div class="totals-box">
+    <div class="row">
+      <span>Subtotal</span>
+      <span>{{money subtotal currency}}</span>
+    </div>
+
+    {{#if discount}}
+    <div class="row">
+      <span>Discount</span>
+      <span>- {{money discount currency}}</span>
+    </div>
+    {{/if}}
+
+    {{#if tax}}
+    <div class="row">
+      <span>VAT ({{percent vat_rate}}%{{#if vat_inclusive}}, inclusive{{/if}})</span>
+      <span>{{money tax currency}}</span>
+    </div>
+    {{/if}}
+
+    {{#if shipping}}
+    <div class="row">
+      <span>Shipping</span>
+      <span>{{money shipping currency}}</span>
+    </div>
+    {{/if}}
+
+    <div class="row grand">
+      <span>Total</span>
+      <span>{{money total currency}}</span>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="notes">
+    <div class="label">Terms</div>
+    {{#if notes}}
+      <p>{{notes}}</p>
+    {{else}}
+      <p>This quotation is valid until {{date valid_until}}. Prices are subject to change after this date.</p>
+    {{/if}}
+  </div>
+
+  <div class="signature-block">
+    {{#if branch.signature_url}}
+      <img class="signature" src="{{{branch.signature_url}}}" alt="">
+    {{else}}
+      <div class="signature-space"></div>
+    {{/if}}
+    <div class="signature-line">Authorised signature</div>
+  </div>
+</footer>
+
+</body>
+</html>

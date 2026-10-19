@@ -12,17 +12,28 @@ const r2 = new S3Client({
 
 const Bucket = process.env.R2_BUCKET_NAME;
 
-export const uploadPdf = async (filePath, pdfBuffer) => {
+// Generic helpers (used for logos, signatures, anything)
+export const uploadFile = async (key, buffer, contentType) => {
     await r2.send(new PutObjectCommand({
         Bucket,
-        Key: filePath,
-        Body: pdfBuffer,
-        ContentType: "application/pdf",
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
     }));
-    return filePath;
+    return key;
 };
 
-export const downloadPdf = async (filePath) => {
-    const res = await r2.send(new GetObjectCommand({ Bucket, Key: filePath }));
-    return Buffer.from(await res.Body.transformToByteArray());
+export const downloadFile = async (key) => {
+    const res = await r2.send(new GetObjectCommand({ Bucket, Key: key }));
+    return {
+        buffer: Buffer.from(await res.Body.transformToByteArray()),
+        contentType: res.ContentType,
+    };
 };
+
+// PDF wrappers: same names and signatures as before, so callers don't change
+export const uploadPdf = (filePath, pdfBuffer) =>
+    uploadFile(filePath, pdfBuffer, "application/pdf");
+
+export const downloadPdf = async (filePath) =>
+    (await downloadFile(filePath)).buffer;

@@ -206,3 +206,42 @@ body {
   text-transform: uppercase;
   color: #9ca3af;
 }
+
+/* ===== Additions used by credit note, quotation and receipt ===== */
+.badge { text-transform: capitalize; }
+.status-issued   { background: #dbeafe; color: #1d4ed8; }
+.status-accepted { background: #dcfce7; color: #15803d; }
+.status-rejected { background: #fee2e2; color: #b91c1c; }
+.status-expired  { background: #fef3c7; color: #b45309; }
+
+.info-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  color: #4b5563;
+}
+
+.amount-box {
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 18px 20px;
+  text-align: center;
+  margin: 8px 0 22px;
+}
+.amount-box .amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f3a5f;
+}
+
+.details {
+  width: 100%;
+  border-collapse: collapse;
+}
+.details td {
+  padding: 9px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+.details td:first-child { color: #6b7280; width: 40%; }
+.details td:last-child { text-align: right; color: #111827; }

@@ -10,7 +10,7 @@
 <header class="header">
   <div class="brand">
     {{#if branch.logo_url}}
-      <img class="logo" src="{{branch.logo_url}}" alt="">
+      <img class="logo" src="{{{branch.logo_url}}}" alt="">
     {{/if}}
     <div class="brand-text">
       <div class="brand-name">{{branch.name}}</div>
@@ -119,7 +119,7 @@
 
   <div class="signature-block">
     {{#if branch.signature_url}}
-      <img class="signature" src="{{branch.signature_url}}" alt="">
+      <img class="signature" src="{{{branch.signature_url}}}" alt="">
     {{else}}
       <div class="signature-space"></div>
     {{/if}}
