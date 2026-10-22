@@ -65,5 +65,17 @@ export const compileTemplate = async (
     ).catch(() => "");
     const ownCss = await fs.readFile(templatePath.replace(/\.hbs$/, ".css"), "utf8").catch(() => "");
     const css = sharedCss + ownCss;
-    return template({ ...data, css, toDataUri }); 
+
+    // Resolve branch image keys (R2 object keys) to inline data URIs so the PDF
+    // header logo and signature render correctly instead of broken relative paths.
+    if (data?.branch) {
+        if (data.branch.logo_url) {
+            data.branch.logoDataUri = await toDataUri(data.branch.logo_url);
+        }
+        if (data.branch.signature_url) {
+            data.branch.signatureDataUri = await toDataUri(data.branch.signature_url);
+        }
+    }
+
+    return template({ ...data, css, toDataUri });
 };

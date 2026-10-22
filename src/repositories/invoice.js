@@ -113,6 +113,7 @@ export const updateInvoice = async (id, invoiceData) => {
             : {}),
         vat_rate: vatRate,
         vat_inclusive: vatInclusive,
+        pdf_path: null,
     };
     if (calculations && Number(existingInvoice.amount_paid || 0) > calculations.total) {
         throw new Error(
@@ -253,7 +254,8 @@ export const cancelInvoice = async (id) => {
     const { data, error } = await supabase
         .from("invoices")
         .update({
-            status: "cancelled"
+            status: "cancelled",
+            pdf_path: null,
         })
         .eq("id", id)
         .neq("status","paid")
@@ -283,6 +285,7 @@ export const markInvoicePaid = async (id) => {
         .update({
             status: "paid",
             amount_paid: invoice.total,
+            pdf_path: null,
         })
         .eq("id", id)
         .select()
@@ -333,6 +336,7 @@ export const markInvoicePartiallyPaid = async (
            .update({
                amount_paid:cappedAmountPaid,
                status,
+               pdf_path: null,
            })
            .eq("id", id)
            .select()
