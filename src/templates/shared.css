@@ -7,14 +7,17 @@
 body {
   margin: 0;
   font-family: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.55;
   color: #1f2937;
   background: #ffffff;
+  min-height: 250mm;     
+  display: flex;
+  flex-direction: column;
 }
 
 .label {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #9ca3af;
@@ -28,24 +31,24 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
-  padding-bottom: 18px;
+  padding-bottom: 22px;
   border-bottom: 2px solid #1f3a5f;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
 }
 
 .logo {
-  max-width: 110px;
-  max-height: 60px;
+  max-width: 170px;
+  max-height: 80px;
   object-fit: contain;
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: #111827;
   margin-bottom: 2px;
@@ -56,7 +59,7 @@ body {
 .doc-meta { text-align: right; }
 
 .doc-title {
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: #1f3a5f;
@@ -65,7 +68,7 @@ body {
 
 .doc-number {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
 }
 
@@ -73,9 +76,9 @@ body {
 .badge {
   display: inline-block;
   margin-top: 8px;
-  padding: 3px 12px;
+  padding: 4px 14px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   background: #f3f4f6;
   color: #4b5563;
@@ -92,11 +95,11 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  margin: 22px 0;
+  margin: 30px 0;
 }
 
 .party-name {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: #111827;
 }
@@ -115,16 +118,16 @@ body {
 .items thead th {
   background: #f3f4f6;
   color: #6b7280;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 700;
-  padding: 9px 10px;
+  padding: 11px 10px;
   text-align: left;
 }
 
 .items td {
-  padding: 11px 10px;
+  padding: 15px 10px;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: top;
   word-wrap: break-word;
@@ -132,10 +135,10 @@ body {
 
 .items tr { page-break-inside: avoid; }
 
-.col-desc  { width: 46%; }
-.col-qty   { width: 10%; }
-.col-rate  { width: 22%; }
-.col-total { width: 22%; }
+.col-desc  { width: 50%; }
+.col-qty   { width: 8%; }
+.col-rate  { width: 21%; }
+.col-total { width: 21%; }
 
 .num { text-align: right !important; }
 
@@ -143,26 +146,28 @@ body {
 .totals {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 22px;
   page-break-inside: avoid;
 }
 
-.totals-box { width: 270px; }
+.totals-box { width: 300px; }
 
 .totals-box .row {
   display: flex;
   justify-content: space-between;
-  padding: 4px 0;
+  padding: 6px 10px;
   color: #4b5563;
 }
 
 .totals-box .grand {
-  margin-top: 6px;
-  padding-top: 9px;
-  border-top: 1px solid #1f3a5f;
-  font-size: 13px;
+  margin-top: 8px;
+  padding-top: 11px 10px;
+  border-top: none;
+  font-size: 14px;
   font-weight: 700;
-  color: #111827;
+  color: #ffffff;
+  border-radius: 4px;
+  background: #1f3a5f;
 }
 
 .totals-box .balance {
@@ -176,32 +181,34 @@ body {
   justify-content: space-between;
   align-items: flex-end;
   gap: 24px;
-  margin-top: 48px;
+  margin-top: auto;
   page-break-inside: avoid;
+  padding-top: 40px;
 }
 
-.notes { max-width: 320px; color: #6b7280; }
+.notes { max-width: 340px;  }
 .notes p { margin: 0; }
 
 .signature-block {
-  width: 180px;
+  width: 200px;
   text-align: center;
 }
 
 .signature {
-  max-width: 160px;
-  max-height: 60px;
+  max-width: 180px;
+  max-height: 70px;
   object-fit: contain;
   display: block;
   margin: 0 auto 4px;
+  mix-blend-mode: multiply;
 }
 
-.signature-space { height: 56px; }
+.signature-space { height: 70px; }
 
 .signature-line {
   border-top: 1px solid #9ca3af;
   padding-top: 5px;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #9ca3af;
@@ -245,3 +252,5 @@ body {
 }
 .details td:first-child { color: #6b7280; width: 40%; }
 .details td:last-child { text-align: right; color: #111827; }
+/* Receipt */
+.amount-box .amount { font-size: 32px; }

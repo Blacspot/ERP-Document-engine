@@ -5,6 +5,7 @@ import {
     updateBranch,
 } from "../repositories/branch.js";
 import { uploadFile, downloadFile } from "../services/document/storageservice.js";
+import { clearInvoicePdfPathsByBranch } from "../repositories/invoice.js";
 
 const EDITABLE_FIELDS = ["name", "address", "email", "phone"];
 
@@ -55,6 +56,7 @@ export const uploadBranchImage = (field) => async (req, res) => {
         const key = `branches/${branch.id}/${field}`;
         await uploadFile(key, req.file.buffer, req.file.mimetype);
         const updated = await updateBranch(branch.id, { [`${field}_url`]: key });
+        await clearInvoicePdfPathsByBranch(branch.id);
         res.json({ success: true, data: updated });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

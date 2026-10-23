@@ -17,7 +17,7 @@ export const downloadInvoice = async (req,res) => {
         const invoice = await getInvoiceById(req.params.id);
         const document = await generateInvoiceDocument(invoice);
         res.setHeader("Content-Type","application/pdf");
-        res.setHeader("Content-Disposition", `inline; filename=${invoice.invoice_number}.pdf`);
+        res.setHeader("Content-Disposition", `attachment; filename=${invoice.invoice_number}.pdf`);
         res.send(document.pdfBuffer);
     } catch (error) {
         res.status(500).json({

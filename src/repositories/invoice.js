@@ -353,3 +353,11 @@ export const savePdfPath = async (id, pdfPath) => {
     await supabase.from("invoices").update({ status: "sent" }).eq("id", id).eq("status", "draft");
     return data;
 };
+
+export const clearInvoicePdfPathsByBranch = async (branchId) => {
+    const { error } = await supabase
+        .from("invoices")
+        .update({ pdf_path: null })
+        .eq("branch_id", branchId);
+    if (error) throw new Error(error.message);
+};

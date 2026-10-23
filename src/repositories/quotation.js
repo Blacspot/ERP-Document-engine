@@ -115,8 +115,17 @@ export const deleteQuotation = async (id) => {
 };
 
 export const savePdfPath = async (id, pdfPath) => {
+    const { data: quotation, error: fetchError } = await supabase
+        .from("quotations").select("status").eq("id", id).single();
+    if (fetchError) throw new Error(fetchError.message);
+
+    const updatePayload = { pdf_path: pdfPath };
+    if (quotation.status === "draft") {
+        updatePayload.status = "sent";
+    }
+
     const { data, error } = await supabase
-        .from("quotations").update({ pdf_path: pdfPath }).eq("id", id).select().single();
+        .from("quotations").update(updatePayload).eq("id", id).select().single();
     if (error) throw new Error(error.message);
     return data;
 };
